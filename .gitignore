@@ -6,7 +6,9 @@
 
 data/*/
 implementations/*/data
-implementations/*/images
+implementations/*/images*
 implementations/*/saved_models
 
 __pycache__
+
+!.vscode/launch.json

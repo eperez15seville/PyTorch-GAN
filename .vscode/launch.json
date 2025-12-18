@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "file",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--data_path", "/mnt/data-1tb/research/images/datasets_ready_2_aug_reduced/PH2/train",
+                "--n_classes", "2",
+                "--channels", "3",
+                "--img_size", "128",
+                "--batch_size", "32",
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/implementations"
+            }
+        }
+    ]
+}
