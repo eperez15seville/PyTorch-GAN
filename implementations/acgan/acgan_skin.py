@@ -241,4 +241,4 @@ for epoch in range(opt.n_epochs):
         batches_done = epoch * len(dataloader) + i
 
     # for each epoch, save sample images    
-    sample_image(n_row=10, batches_done=epoch)
+    sample_image(n_row=5, batches_done=epoch)
