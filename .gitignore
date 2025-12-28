@@ -13,3 +13,5 @@ __pycache__
 
 !.vscode/launch.json
 .env
+
+images/
