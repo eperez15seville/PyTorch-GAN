@@ -12,3 +12,4 @@ implementations/*/saved_models
 __pycache__
 
 !.vscode/launch.json
+.env

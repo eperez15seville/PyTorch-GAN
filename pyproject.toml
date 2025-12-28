@@ -12,7 +12,8 @@ dependencies = [
     "scipy",
     "pillow",
     "urllib3",
-    "scikit-image"
+    "scikit-image",
+    "dotenv>=0.9.9",
 ]
 
 [tool.uv]
