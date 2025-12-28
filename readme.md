@@ -3,8 +3,11 @@
 ```
 docker run \
     --gpus all \
+    --shm-size 1g \
     -v /home/eperezp1990/.temp:/home/eperez \
-    --name pytorch-2 -dit eperezp1990/pytorch:2.2.0-cuda11.4
+    --name pytorch-2 \
+    -dit \
+    eperezp1990/pytorch:2.2.0-cuda11.4
 ```
 
 # Execute experiment
