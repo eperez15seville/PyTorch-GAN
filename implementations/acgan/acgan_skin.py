@@ -132,7 +132,11 @@ generator.apply(weights_init_normal)
 discriminator.apply(weights_init_normal)
 
 # Configure data loader
-dataset = datasets.ImageFolder(root=opt.data_path, transform=util.custom_preprocessing(opt))
+dataset = datasets.ImageFolder(
+    root=opt.data_path, 
+    transform=util.custom_preprocessing(opt), 
+    is_valid_file=util.is_valid_file
+)
 dataloader = torch.utils.data.DataLoader(
     dataset,
     batch_size=opt.batch_size,

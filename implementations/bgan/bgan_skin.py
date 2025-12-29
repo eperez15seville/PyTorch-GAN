@@ -18,25 +18,29 @@ import torch
 
 import util
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 images_dir = os.path.join(current_dir, "images")
 if not os.path.exists(images_dir):
     os.makedirs(images_dir)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
+parser.add_argument("--n_epochs", type=int, default=int(os.getenv("n_epochs", 200)), help="number of epochs of training")
+parser.add_argument("--batch_size", type=int, default=int(os.getenv("batch_size", 64)), help="size of the batches")
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
 parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
 parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
 parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=28, help="size of each image dimension")
-parser.add_argument("--channels", type=int, default=1, help="number of image channels")
+parser.add_argument("--img_size", type=int, default=int(os.getenv("img_size", 28)), help="size of each image dimension")
+parser.add_argument("--channels", type=int, default=int(os.getenv("channels", 1)), help="number of image channels")
 parser.add_argument("--sample_interval", type=int, default=400, help="interval betwen image samples")
-parser.add_argument("--data_path", type=str, required=True, help="path to dataset folder with subfolders as labels")
+parser.add_argument("--data_path", type=str, default=os.getenv("data_path", ""), help="path to dataset folder with subfolders as labels")
 # not used
-parser.add_argument("--n_classes", type=int, default=10, help="number of classes for dataset")
+parser.add_argument("--n_classes", type=int, default=int(os.getenv("n_classes", 10)), help="number of classes for dataset")
 
 opt = parser.parse_args()
 print(opt)
@@ -111,7 +115,11 @@ if cuda:
     discriminator_loss.cuda()
 
 # Configure data loader
-dataset = datasets.ImageFolder(root=opt.data_path, transform=util.custom_preprocessing(opt))
+dataset = datasets.ImageFolder(
+    root=opt.data_path, 
+    transform=util.custom_preprocessing(opt), 
+    is_valid_file=util.is_valid_file
+)
 dataloader = torch.utils.data.DataLoader(
     dataset,
     batch_size=opt.batch_size,

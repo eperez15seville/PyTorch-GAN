@@ -14,7 +14,7 @@
                 "--data_path", "/mnt/data-1tb/research/images/datasets_ready_2_aug_reduced/PH2/train",
                 "--n_classes", "2",
                 "--channels", "3",
-                "--img_size", "128",
+                "--img_size", "224",
                 "--batch_size", "32",
             ],
             "env": {
