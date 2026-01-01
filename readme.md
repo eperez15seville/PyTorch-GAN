@@ -7,7 +7,7 @@ docker run \
     -v /home/eperezp1990/.temp:/home/eperez \
     --name pytorch-2 \
     -dit \
-    eperezp1990/pytorch:2.2.0-cuda11.4
+    eperezp1990/pytorch:2.2.0-cuda11.4-p310
 ```
 
 # Execute experiment
