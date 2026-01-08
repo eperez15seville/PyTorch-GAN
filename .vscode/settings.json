@@ -1,0 +1,22 @@
+{
+  "python.formatting.provider": "black",
+  "editor.formatOnSave": false,
+  "python.linting.enabled": true,
+  "yaml.customTags": [
+    "!reference sequence"
+  ],
+  "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "never"
+  },
+  "jupyter.notebookFileRoot": "${workspaceFolder}/vit_jax",
+  "editor.rulers": [98],
+  "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.formatOnSave": true
+  },
+  "black-formatter.args": [
+    "--line-length=98"
+  ]
+}
+  

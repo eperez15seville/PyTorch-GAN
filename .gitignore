@@ -1,5 +1,4 @@
 
-*.json
 *.h5
 *.hdf5
 .DS_Store
@@ -11,7 +10,6 @@ implementations/*/saved_models
 
 __pycache__
 
-!.vscode/launch.json
 .env
 
 images/
