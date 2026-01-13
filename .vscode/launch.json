@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "file",
+            "name": "server",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
@@ -16,7 +16,25 @@
                 "--channels", "3",
                 "--img_size", "224",
                 "--batch_size", "32",
-                "--results_path", "/mnt/data-4tb/src/skin/PyTorch-GAN/images/acgan/PH2",
+                "--results_path", "/mnt/data-4tb/src/skin/PyTorch-GAN/images/bgan/PH2",
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/implementations"
+            }
+        },
+        {
+            "name": "laptop",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [
+                "--data_path", "/mnt/data-1tb/research/images/datasets_ready_1_reduced/DERM-LIB/train",
+                "--n_classes", "2",
+                "--channels", "3",
+                "--img_size", "224",
+                "--batch_size", "32",
+                "--results_path", "/mnt/data-1tb/src/skin/PyTorch-GAN/images/bgan/DERM-LIB",
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/implementations"

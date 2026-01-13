@@ -69,6 +69,7 @@ parser.add_argument(
     default=os.getenv("results_path", ""),
     help="path to dataset folder with subfolders as labels",
 )
+
 opt = parser.parse_args()
 print(opt)
 
@@ -180,7 +181,7 @@ dataset_init = datasets.ImageFolder(
 # find the classes to augment
 to_aug = util.get_number_instances_to_aug(dataset_init)
 
-# this ACGAN generates all classes
+# this ACGAN learns from all classes
 # we are not generating the greatest classes only (nevus, for example)
 dataset = datasets.ImageFolder(
     root=opt.data_path,
