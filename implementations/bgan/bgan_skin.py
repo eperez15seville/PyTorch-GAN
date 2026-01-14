@@ -22,11 +22,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-images_dir = os.path.join(current_dir, "images")
-if not os.path.exists(images_dir):
-    os.makedirs(images_dir)
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--n_epochs",
