@@ -14,19 +14,67 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch
 
-os.makedirs("images", exist_ok=True)
+import util
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
-parser.add_argument("--batch_size", type=int, default=64, help="size of the batches")
+parser.add_argument(
+    "--n_epochs",
+    type=int,
+    default=int(os.getenv("n_epochs", 200)),
+    help="number of epochs of training",
+)
+parser.add_argument(
+    "--batch_size", type=int, default=int(os.getenv("batch_size", 64)), help="size of the batches"
+)
 parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
-parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
-parser.add_argument("--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation")
-parser.add_argument("--latent_dim", type=int, default=62, help="dimensionality of the latent space")
-parser.add_argument("--img_size", type=int, default=32, help="size of each image dimension")
-parser.add_argument("--channels", type=int, default=1, help="number of image channels")
-parser.add_argument("--sample_interval", type=int, default=400, help="number of image channels")
+parser.add_argument(
+    "--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient"
+)
+parser.add_argument(
+    "--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient"
+)
+parser.add_argument(
+    "--n_cpu", type=int, default=8, help="number of cpu threads to use during batch generation"
+)
+parser.add_argument(
+    "--latent_dim", type=int, default=100, help="dimensionality of the latent space"
+)
+parser.add_argument(
+    "--img_size",
+    type=int,
+    default=int(os.getenv("img_size", 28)),
+    help="size of each image dimension",
+)
+parser.add_argument(
+    "--channels", type=int, default=int(os.getenv("channels", 1)), help="number of image channels"
+)
+parser.add_argument(
+    "--sample_interval", type=int, default=400, help="interval betwen image samples"
+)
+parser.add_argument(
+    "--data_path",
+    type=str,
+    default=os.getenv("data_path", ""),
+    help="path to dataset folder with subfolders as labels",
+)
+parser.add_argument(
+    "--results_path",
+    type=str,
+    default=os.getenv("results_path", ""),
+    help="path to dataset folder with subfolders as labels",
+)
+# not used, but needed for sharing arguments
+parser.add_argument(
+    "--n_classes",
+    type=int,
+    default=int(os.getenv("n_classes", 10)),
+    help="number of classes for dataset",
+)
+
 opt = parser.parse_args()
 print(opt)
 
@@ -49,7 +97,7 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.init_size = opt.img_size // 4
-        self.l1 = nn.Sequential(nn.Linear(opt.latent_dim, 128 * self.init_size ** 2))
+        self.l1 = nn.Sequential(nn.Linear(opt.latent_dim, 128 * self.init_size**2))
 
         self.conv_blocks = nn.Sequential(
             nn.BatchNorm2d(128),
@@ -99,111 +147,125 @@ class Discriminator(nn.Module):
         return out
 
 
-# Initialize generator and discriminator
-generator = Generator()
-discriminator = Discriminator()
-
-if cuda:
-    generator.cuda()
-    discriminator.cuda()
-
-# Initialize weights
-generator.apply(weights_init_normal)
-discriminator.apply(weights_init_normal)
-
 # Configure data loader
-os.makedirs("../../data/mnist", exist_ok=True)
-dataloader = torch.utils.data.DataLoader(
-    datasets.MNIST(
-        "../../data/mnist",
-        train=True,
-        download=True,
-        transform=transforms.Compose(
-            [transforms.Resize(opt.img_size), transforms.ToTensor(), transforms.Normalize([0.5], [0.5])]
-        ),
-    ),
-    batch_size=opt.batch_size,
-    shuffle=True,
+dataset_init = datasets.ImageFolder(
+    root=opt.data_path, transform=util.custom_preprocessing(opt), is_valid_file=util.is_valid_file
 )
 
-# Optimizers
-optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
-optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+# find the classes to augment
+to_aug = util.get_number_instances_to_aug(dataset_init)
 
-Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
+for class_idx, data in to_aug.items():
 
-# ----------
-#  Training
-# ----------
+    if "all" == class_idx:
+        continue
 
-# BEGAN hyper parameters
-gamma = 0.75
-lambda_k = 0.001
-k = 0.0
+    # this BEGAN learns one class at a time
+    # we are not generating the greatest classes only (nevus, for example)
+    dataset = util.ImageFolderFilterClasses(
+        root=opt.data_path,
+        transform=util.custom_preprocessing(opt),
+        is_valid_file=util.is_valid_file,
+        filter_classes=[data["class"]],
+    )
 
-for epoch in range(opt.n_epochs):
-    for i, (imgs, _) in enumerate(dataloader):
+    dataloader = DataLoader(
+        dataset,
+        batch_size=opt.batch_size,
+        shuffle=True,
+        num_workers=opt.n_cpu,
+    )
 
-        # Configure input
-        real_imgs = Variable(imgs.type(Tensor))
+    # Initialize generator and discriminator
+    generator = Generator()
+    discriminator = Discriminator()
 
-        # -----------------
-        #  Train Generator
-        # -----------------
+    if cuda:
+        generator.cuda()
+        discriminator.cuda()
 
-        optimizer_G.zero_grad()
+    # Initialize weights
+    generator.apply(weights_init_normal)
+    discriminator.apply(weights_init_normal)
 
-        # Sample noise as generator input
-        z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], opt.latent_dim))))
+    # Optimizers
+    optimizer_G = torch.optim.Adam(generator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
+    optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
 
-        # Generate a batch of images
-        gen_imgs = generator(z)
+    Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
-        # Loss measures generator's ability to fool the discriminator
-        g_loss = torch.mean(torch.abs(discriminator(gen_imgs) - gen_imgs))
+    # BEGAN hyper parameters
+    gamma = 0.75
+    lambda_k = 0.001
+    k = 0.0
 
-        g_loss.backward()
-        optimizer_G.step()
+    for epoch in range(opt.n_epochs):
+        for i, (imgs, _) in enumerate(dataloader):
 
-        # ---------------------
-        #  Train Discriminator
-        # ---------------------
+            # Configure input
+            real_imgs = Variable(imgs.type(Tensor))
 
-        optimizer_D.zero_grad()
+            # -----------------
+            #  Train Generator
+            # -----------------
 
-        # Measure discriminator's ability to classify real from generated samples
-        d_real = discriminator(real_imgs)
-        d_fake = discriminator(gen_imgs.detach())
+            optimizer_G.zero_grad()
 
-        d_loss_real = torch.mean(torch.abs(d_real - real_imgs))
-        d_loss_fake = torch.mean(torch.abs(d_fake - gen_imgs.detach()))
-        d_loss = d_loss_real - k * d_loss_fake
+            # Sample noise as generator input
+            z = Variable(Tensor(np.random.normal(0, 1, (imgs.shape[0], opt.latent_dim))))
 
-        d_loss.backward()
-        optimizer_D.step()
+            # Generate a batch of images
+            gen_imgs = generator(z)
 
-        # ----------------
-        # Update weights
-        # ----------------
+            # Loss measures generator's ability to fool the discriminator
+            g_loss = torch.mean(torch.abs(discriminator(gen_imgs) - gen_imgs))
 
-        diff = torch.mean(gamma * d_loss_real - d_loss_fake)
+            g_loss.backward()
+            optimizer_G.step()
 
-        # Update weight term for fake samples
-        k = k + lambda_k * diff.item()
-        k = min(max(k, 0), 1)  # Constraint to interval [0, 1]
+            # ---------------------
+            #  Train Discriminator
+            # ---------------------
 
-        # Update convergence metric
-        M = (d_loss_real + torch.abs(diff)).data[0]
+            optimizer_D.zero_grad()
 
-        # --------------
-        # Log Progress
-        # --------------
+            # Measure discriminator's ability to classify real from generated samples
+            d_real = discriminator(real_imgs)
+            d_fake = discriminator(gen_imgs.detach())
 
-        print(
-            "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f] -- M: %f, k: %f"
-            % (epoch, opt.n_epochs, i, len(dataloader), d_loss.item(), g_loss.item(), M, k)
+            d_loss_real = torch.mean(torch.abs(d_real - real_imgs))
+            d_loss_fake = torch.mean(torch.abs(d_fake - gen_imgs.detach()))
+            d_loss = d_loss_real - k * d_loss_fake
+
+            d_loss.backward()
+            optimizer_D.step()
+
+            # ----------------
+            # Update weights
+            # ----------------
+
+            diff = torch.mean(gamma * d_loss_real - d_loss_fake)
+
+            # Update weight term for fake samples
+            k = k + lambda_k * diff.item()
+            k = min(max(k, 0), 1)  # Constraint to interval [0, 1]
+
+            # Update convergence metric
+            M = (d_loss_real + torch.abs(diff)).item()
+
+            print(
+                "[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f] -- M: %f, k: %f"
+                % (epoch, opt.n_epochs, i, len(dataloader), d_loss.item(), g_loss.item(), M, k)
+            )
+
+            batches_done = epoch * len(dataloader) + i
+
+        # for each epoch, save sample images
+        util.sample_image(
+            to_aug=to_aug,
+            latent_dim=opt.latent_dim,
+            generator=generator,
+            results_path=opt.results_path,
+            all_labels=False,
+            one_label=data["class"],
         )
-
-        batches_done = epoch * len(dataloader) + i
-        if batches_done % opt.sample_interval == 0:
-            save_image(gen_imgs.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
