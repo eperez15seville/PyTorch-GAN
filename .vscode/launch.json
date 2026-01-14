@@ -34,7 +34,7 @@
                 "--channels", "3",
                 "--img_size", "224",
                 "--batch_size", "32",
-                "--results_path", "/mnt/data-1tb/src/skin/PyTorch-GAN/images/bgan/DERM-LIB",
+                "--results_path", "/mnt/data-1tb/src/skin/PyTorch-GAN/images/aae/DERM-LIB",
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/implementations"
