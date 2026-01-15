@@ -69,6 +69,13 @@ parser.add_argument(
     default=os.getenv("results_path", ""),
     help="path to dataset folder with subfolders as labels",
 )
+# not used, but needed for sharing arguments
+parser.add_argument(
+    "--test_data_path",
+    type=str,
+    default=os.getenv("test_data_path", ""),
+    help="path to dataset folder with subfolders as labels",
+)
 
 opt = parser.parse_args()
 print(opt)
@@ -175,7 +182,9 @@ discriminator.apply(weights_init_normal)
 
 # Configure data loader
 dataset_init = datasets.ImageFolder(
-    root=opt.data_path, transform=util.custom_preprocessing(opt), is_valid_file=util.is_valid_file
+    root=opt.data_path,
+    transform=util.custom_preprocessing(opt),
+    is_valid_file=util.is_valid_file,
 )
 
 # find the classes to augment

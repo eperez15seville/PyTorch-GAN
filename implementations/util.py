@@ -73,6 +73,13 @@ def get_number_instances_to_aug(dataset: ImageFolder):
     return to_aug
 
 
+def save_images(images, path):
+    if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+
+    for idx, img in enumerate(images):
+        save_image(img.data, os.path.join(path, f"{idx:06}.png"), normalize=True)
+
 def sample_image(
     to_aug,
     latent_dim,
@@ -102,11 +109,7 @@ def sample_image(
         # get the path of the current python file, and save images relative to that path
         images_dir = os.path.join(results_path, data["class"])
 
-        if not os.path.exists(images_dir):
-            os.makedirs(images_dir, exist_ok=True)
-
-        for idx, img in enumerate(gen_imgs):
-            save_image(img.data, os.path.join(images_dir, f"{idx:06}.png"), normalize=True)
+        save_images(gen_imgs, images_dir)
 
 
 class ImageFolderFilterClasses(ImageFolder):

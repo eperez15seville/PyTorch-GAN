@@ -76,6 +76,12 @@ parser.add_argument(
     default=int(os.getenv("n_classes", 10)),
     help="number of classes for dataset",
 )
+parser.add_argument(
+    "--test_data_path",
+    type=str,
+    default=os.getenv("test_data_path", ""),
+    help="path to dataset folder with subfolders as labels",
+)
 
 
 opt = parser.parse_args()
