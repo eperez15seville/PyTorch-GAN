@@ -32,6 +32,7 @@ No categories:
 aae/
 began/
 bgan/
+dcgan/
 ```
 
 Categories:
