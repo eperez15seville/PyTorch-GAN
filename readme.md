@@ -33,6 +33,8 @@ aae/
 began/
 bgan/
 dcgan/
+dragan/
+ebgan/
 ```
 
 Categories:
