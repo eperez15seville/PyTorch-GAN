@@ -8,6 +8,10 @@ from torchvision.utils import save_image
 from torch.autograd import Variable
 import torch
 
+from torch.utils.data import Dataset
+from PIL import Image
+import glob
+
 import os
 import os.path
 from typing import Dict, List, Tuple
@@ -75,10 +79,11 @@ def get_number_instances_to_aug(dataset: ImageFolder):
 
 def save_images(images, path):
     if not os.path.exists(path):
-            os.makedirs(path, exist_ok=True)
+        os.makedirs(path, exist_ok=True)
 
     for idx, img in enumerate(images):
         save_image(img.data, os.path.join(path, f"{idx:06}.png"), normalize=True)
+
 
 def sample_image(
     to_aug,
@@ -86,7 +91,7 @@ def sample_image(
     generator,
     results_path,
     all_labels=True,
-    one_label: str=None,
+    one_label: str = None,
 ):
     for label, data in to_aug.items():
         if label == "all":
@@ -148,3 +153,48 @@ class ImageFolderFilterClasses(ImageFolder):
 
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         return classes, class_to_idx
+
+
+class ImageDatasetContextEncoder(Dataset):
+    def __init__(self, root, transforms_=None, img_size=128, mask_size=64, mode="train"):
+        self.transform = transforms.Compose(transforms_)
+        self.img_size = img_size
+        self.mask_size = mask_size
+        self.mode = mode
+        extensions = ["*.jpg", "*.jpeg", "*.png", "*.bmp"]
+        self.files = sorted([f for ext in extensions for f in glob.glob(f"{root}/{ext}")])
+
+    def apply_random_mask(self, img):
+        """Randomly masks image"""
+        y1, x1 = np.random.randint(0, self.img_size - self.mask_size, 2)
+        y2, x2 = y1 + self.mask_size, x1 + self.mask_size
+        masked_part = img[:, y1:y2, x1:x2]
+        masked_img = img.clone()
+        masked_img[:, y1:y2, x1:x2] = 1
+
+        return masked_img, masked_part
+
+    def apply_center_mask(self, img):
+        """Mask center part of image"""
+        # Get upper-left pixel coordinate
+        i = (self.img_size - self.mask_size) // 2
+        masked_img = img.clone()
+        masked_img[:, i : i + self.mask_size, i : i + self.mask_size] = 1
+
+        return masked_img, i
+
+    def __getitem__(self, index):
+
+        img = Image.open(self.files[index % len(self.files)])
+        img = self.transform(img)
+        if self.mode == "train":
+            # For training data perform random mask
+            masked_img, aux = self.apply_random_mask(img)
+        else:
+            # For test data mask the center of the image
+            masked_img, aux = self.apply_center_mask(img)
+
+        return img, masked_img, aux
+
+    def __len__(self):
+        return len(self.files)

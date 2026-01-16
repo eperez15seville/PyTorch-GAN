@@ -46,4 +46,5 @@ Issues:
 ```
 bicyclegan/
 ccgan/
+cogan/
 ```
