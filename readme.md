@@ -48,4 +48,6 @@ bicyclegan/
 ccgan/
 cogan/
 context_encoder/ dado un pedazo de imagen, la completa.
+cyclegan/ depende de un validation dataset
+
 ```
