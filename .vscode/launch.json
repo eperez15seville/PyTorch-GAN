@@ -10,14 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": [
-                "--data_path", "/mnt/data-4tb/research/images/datasets_ready_1_reduced/PH2/train",
-                "--n_classes", "2",
-                "--channels", "3",
-                "--img_size", "224",
-                "--batch_size", "32",
-                "--results_path", "/mnt/data-4tb/src/skin/PyTorch-GAN/images/bgan/PH2",
-            ],
+            "args": [],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/implementations"
             }
@@ -28,14 +21,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": [
-                "--data_path", "/mnt/data-1tb/research/images/datasets_ready_1_reduced/DERM-LIB/train",
-                "--n_classes", "2",
-                "--channels", "3",
-                "--img_size", "224",
-                "--batch_size", "32",
-                "--results_path", "/mnt/data-1tb/src/skin/PyTorch-GAN/images/aae/DERM-LIB",
-            ],
+            "args": [],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/implementations"
             }

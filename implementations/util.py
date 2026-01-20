@@ -21,14 +21,15 @@ cuda = True if torch.cuda.is_available() else False
 FloatTensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 LongTensor = torch.cuda.LongTensor if cuda else torch.LongTensor
 
+VALID_EXTENSIONS = (".jpg", ".jpeg", ".png", ".bmp", ".png")
+
 
 def is_valid_file(filepath: str):
     # Add your custom logic here to determine if the file is valid
     # For example, you might want to check file extensions or other criteria
-    valid_extensions = (".jpg", ".jpeg", ".png", ".bmp", ".png")
     filename = os.path.basename(filepath)
 
-    return (not filename.startswith(".")) and filename.lower().endswith(valid_extensions)
+    return (not filename.startswith(".")) and filename.lower().endswith(VALID_EXTENSIONS)
 
 
 def custom_preprocessing(opt):
@@ -154,3 +155,36 @@ class ImageFolderFilterClasses(ImageFolder):
         class_to_idx = {cls_name: i for i, cls_name in enumerate(classes)}
         return classes, class_to_idx
 
+
+class ImageDatasetCCGAN(Dataset):
+    def __init__(
+        self, root, transforms_x=None, transforms_lr=None, mode="train", filter_classes=None
+    ):
+        self.filter_classes = filter_classes
+
+        self.transform_x = transforms.Compose(transforms_x)
+        self.transform_lr = transforms.Compose(transforms_lr)
+
+        self.files = sorted(
+            [f for f in glob.glob("%s/**/*.*" % root, recursive=True) if is_valid_file(f)]
+        )
+
+        if self.filter_classes is not None:
+            filtered_files = []
+            for f in self.files:
+                parent_dir = os.path.basename(os.path.dirname(f))
+                if parent_dir in self.filter_classes:
+                    filtered_files.append(f)
+            self.files = filtered_files
+
+    def __getitem__(self, index):
+
+        img = Image.open(self.files[index % len(self.files)])
+
+        x = self.transform_x(img)
+        x_lr = self.transform_lr(img)
+
+        return {"x": x, "x_lr": x_lr}
+
+    def __len__(self):
+        return len(self.files)

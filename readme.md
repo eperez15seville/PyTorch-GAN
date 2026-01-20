@@ -47,8 +47,8 @@ cgan/
 Issues:
 
 ```
-bicyclegan/
-ccgan/
+bicyclegan/ necesita 1 conjunto extra para generar
+ccgan/ funciona, pero no se aplica al caso de las imagenes de skin
 cogan/
 context_encoder/ dado un pedazo de imagen, la completa.
 cyclegan/ depende de un validation dataset
