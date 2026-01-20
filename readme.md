@@ -35,6 +35,7 @@ bgan/
 dcgan/
 dragan/
 ebgan/
+gan/
 ```
 
 Categories:
@@ -52,4 +53,5 @@ ccgan/ funciona, pero no se aplica al caso de las imagenes de skin
 cogan/
 context_encoder/ dado un pedazo de imagen, la completa.
 cyclegan/ depende de un validation dataset
+esrgan/ mejora la resolucion de las imagenes
 ```
